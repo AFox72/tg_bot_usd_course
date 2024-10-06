@@ -20,7 +20,7 @@ def greet(update: Update, context: telegram.ext.CallbackContext):
 
 
 def get_currency_rate(update: Update, context: telegram.ext.CallbackContext):
-    api_key = os.environ.get('OPEN_EXCHANGE_RATES_KEY')
+    api_key = dc975d9ede914d129ab5b961bf732f1d
     base_url = f"https://openexchangerates.org/api/latest.json?app_id={api_key}&symbols=USD"
     response = requests.get(base_url)
     rate = response.json()['rates']['USD']
