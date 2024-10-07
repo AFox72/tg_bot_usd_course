@@ -1,43 +1,32 @@
-import logging
-import os
-
+import telebot
 import requests
-import telegram
-from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
+TOKEN = '7562461923:AAEnwHGdqtsq8cdDh2XhnTpylurvAyyOGPA'
+
+bot = telebot.TeleBot(TOKEN)
 
 
-def start(update: Update, context: telegram.ext.CallbackContext):
-    update.message.reply_text("Добрый день. Как вас зовут?")
+def greet_user():
+    @bot.message_handler(commands=['start'])
+    def start(message):
+        bot.send_message(message.chat.id, "Добрый день. Как вас зовут?")
+    
+    @bot.message_handler(func=lambda message: True)
+    def collect_name(message):
+        global username
+        username = message.text
+        bot.send_message(message.chat.id, f"Здравствуйте, {username}! Курс доллара сегодня ... (получение данных)")
+
+        url = 'https://www.cbr-xml-daily.ru/daily_json.js'
+       
+        response = requests.get(url).json()
+      
+        rate = response['Valute']['USD']['Value']
+      
+        bot.send_message(message.chat.id, f"Курс доллара сегодня {rate} рублей.")
 
 
-def greet(update: Update, context: telegram.ext.CallbackContext):
-    name = update.message.text
-    update.message.reply_text(f"Рад знакомству, {name}!")
+greet_user()
 
 
-def get_currency_rate(update: Update, context: telegram.ext.CallbackContext):
-    api_key = dc975d9ede914d129ab5b961bf732f1d
-    base_url = f"https://openexchangerates.org/api/latest.json?app_id={api_key}&symbols=USD"
-    response = requests.get(base_url)
-    rate = response.json()['rates']['USD']
-    update.message.reply_text(f"Курс доллара сегодня {rate} рублей.")
-
-
-def main():
-    updater = Updater(os.environ.get('TELEGRAM_TOKEN'), use_context=True)
-    dp = updater.dispatcher
-
-    dp.add_handler(CommandHandler('start', start))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, greet))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, get_currency_rate))
-
-    updater.start_polling()
-    updater.idle()
-
-
-if __name__ == '__main__':
-    main()
+bot.infinity_polling()
